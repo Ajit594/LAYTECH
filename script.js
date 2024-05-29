@@ -38,25 +38,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const audioContext = new (window.AudioContext || window.webkitAudioContext)();
         const destination = audioContext.createMediaStreamDestination();
-        const mediaRecorder = new MediaRecorder(destination.stream);
-
-        const audioChunks = [];
-        mediaRecorder.ondataavailable = event => audioChunks.push(event.data);
-        mediaRecorder.onstop = () => {
-            const audioBlob = new Blob(audioChunks, { type: 'audio/mpeg' }); // Changed type to MPEG
-            const audioUrl = URL.createObjectURL(audioBlob);
-            const link = document.createElement('a');
-            link.href = audioUrl;
-            link.download = 'speech.mp3'; // Changed filename to .mp3
-            link.click();
-        };
+        const recorder = new MediaRecorder(destination.stream);
 
         synth.speak(utterance);
 
-        // Start and stop recording
-        mediaRecorder.start();
-        setTimeout(() => {
-            mediaRecorder.stop();
-        }, 2000); // Recording for 2 seconds to ensure complete speech capture
+        const audioChunks = [];
+        recorder.ondataavailable = event => audioChunks.push(event.data);
+        recorder.onstop = () => {
+            const audioBlob = new Blob(audioChunks);
+            const audioUrl = URL.createObjectURL(audioBlob);
+            const link = document.createElement('a');
+            link.href = audioUrl;
+            link.download = 'speech.wav';
+            link.click();
+        };
+
+        utterance.onstart = () => recorder.start();
+        utterance.onend = () => recorder.stop();
     });
 });
